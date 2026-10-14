@@ -60,4 +60,4 @@ def clean():
     con_expenses.close()
 
 
-clean()
+
