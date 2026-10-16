@@ -1,10 +1,12 @@
 from database import *
+from datetime import date
 
 def add_expense_flow():
-    print('Для выхода из программы напишите exit')
+    d = add_date()
+    print('Для выхода из программы напишите выйти')
     while True:
         line = input('Введите трату: ')
-        if line.lower() == 'exit':
+        if line.lower() == 'выйти':
             break
         parts = line.split()
         if len(parts) != 2:
@@ -16,23 +18,35 @@ def add_expense_flow():
         except ValueError:
             print('трата должна быть числом!')
             continue
-        add_expense(category,amount)
+        add_expense(d,category,amount)
+
+
+def add_date():
+    track_date = input('\n по умолчанию стоит сегодняшняя дата. поменять? (да / нет) -> ')
+    if track_date.lower() == 'да':
+        d = input('введите в формате YY-MM-DD: ')
+    else:
+        d = date.today().strftime("%Y-%m-%d")
+    return d
 
 
 def show_stats():
+    # if not get_max_category():
+    #     print('\n нет данных \n')
+    #     return
+
     while True:
         try:
-            menu = int(input(" 1.Траты за весь период \n 2.Сумма всех трат за период \n 3.Максимум трат \n 4.Выход \n --> "))
+            menu = int(input(" 1.Траты за весь период \n 2.Сумма всех трат за период \n 3.Максимум трат \n 4.Максимальные траты за день \n 5.Выход \n --> "))
         except ValueError:
             print('выбор должен быть числом! \n ')
             continue
 
-
         match menu:
             case 1:
-                all_exp = get_all_expense()
-                for category, amount in all_exp:
-                    print(f'{category} - {amount}')
+                all_exp = get_all_expenses()
+                for d, category, amount in all_exp:
+                    print(f'{d}  {category} - {amount}')
             case 2:
                 print(total_expense(), '\n')
             case 3:
@@ -40,9 +54,13 @@ def show_stats():
                 for category, amount in max_category:
                     print(f'{category} - {amount}')
             case 4:
+                max_amounts = get_max_amounts()
+                for d, amount in max_amounts:
+                    print(f'{d} : {amount}')
+            case 5:
                 return
             case _:
-                print('введен невеный формат!')
+                print('введен неверный формат!')
                 continue
 
 
@@ -63,7 +81,7 @@ def show_menu():
             case 3:
                 break
             case _:
-                print('введен невеный формат!')
+                print('введен неверный формат!')
                 continue
 
 
@@ -71,4 +89,5 @@ def main():
     init_db()
     show_menu()
 
-main()
+if __name__ == "__main__":
+    main()

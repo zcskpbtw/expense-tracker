@@ -4,23 +4,23 @@ import sqlite3
 def init_db():
     con_expenses = sqlite3.connect('expenses.db')
     cur_exp = con_expenses.cursor()
-    cur_exp.execute('CREATE TABLE IF NOT EXISTS expenses (category, amount INT);')
+    cur_exp.execute('CREATE TABLE IF NOT EXISTS expenses (date, category, amount INT);')
     con_expenses.commit()
     con_expenses.close()
 
 
-def add_expense(category, amount):
+def add_expense(date, category, amount):
     con_expenses = sqlite3.connect('expenses.db')
     cur_exp = con_expenses.cursor()
-    cur_exp.execute('INSERT INTO expenses (category, amount) VALUES (?,?);', (category,amount))
+    cur_exp.execute('INSERT INTO expenses (date, category, amount) VALUES (?,?,?);', (date,category,amount))
     con_expenses.commit()
     con_expenses.close()
 
 
-def get_all_expense():
+def get_all_expenses():
     con_expenses = sqlite3.connect('expenses.db')
     cur_exp = con_expenses.cursor()
-    cur_exp.execute('SELECT category, amount FROM expenses;')
+    cur_exp.execute('SELECT date, category, amount FROM expenses;')
     all_exp = cur_exp.fetchall()
     con_expenses.close()
     return all_exp
@@ -44,6 +44,15 @@ def get_max_category():
     return max_summ_category
 
 
+def get_max_amounts():
+    con_expenses = sqlite3.connect('expenses.db')
+    cur_exp = con_expenses.cursor()
+    cur_exp.execute('SELECT date, SUM(amount) FROM expenses GROUP BY date ORDER BY SUM(amount) DESC LIMIT 1 ;')
+    max_summ_amounts = cur_exp.fetchall()
+    con_expenses.close()
+    return max_summ_amounts
+
+
 # def get_avg_per_day():
 #     con_expenses = sqlite3.connect('expenses.db')
 #     cur_exp = con_expenses.cursor()
@@ -59,5 +68,5 @@ def clean():
     con_expenses.commit()
     con_expenses.close()
 
-
+# clean()
 
