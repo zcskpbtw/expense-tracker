@@ -1,6 +1,13 @@
-from click import clear
 from database import *
-from datetime import date
+from datetime import date,datetime
+
+
+def is_valid_date(date_string):
+    try:
+        datetime.strptime(date_string, "%Y-%m-%d")
+    except ValueError:
+        return False
+    return True
 
 def add_expense_flow():
     d = add_date()
@@ -21,24 +28,24 @@ def add_expense_flow():
         except ValueError:
             print('трата должна быть числом!')
             continue
+        if amount <= 0:
+            print('трата должна быть больше 0')
+            continue
         add_expense(d,category,amount)
-
 
 def add_date():
     track_date = input('\n по умолчанию стоит сегодняшняя дата. поменять? (да / нет) -> ')
     if track_date.lower() == 'да':
-        d = input('введите в формате YYYY-MM-DD: ')
-        date_split = d.split('-')
-        if len(date_split) != 3 or len(date_split[0]) != 4 or len(date_split[1]) != 2 or len(date_split[2]) != 2:
-            print('Введен неверный формат. попробуйте еще раз')
-            return False
+            d = input('введите в формате YYYY-MM-DD: ')
+            if not is_valid_date(d):
+                print('неверный формат!')
+                return False
     elif track_date.lower() == 'нет':
         d = date.today().strftime("%Y-%m-%d")
     else:
         print('неизвестная команда')
         return False
     return d
-
 
 def show_stats():
     if not get_max_category():
@@ -47,7 +54,7 @@ def show_stats():
 
     while True:
         try:
-            menu = int(input(" 1.Траты за весь период \n 2.Сумма всех трат за период \n 3.Максимум трат \n 4.Максимальные траты за день \n 5.Выход \n --> "))
+            menu = int(input(" 1.Траты за весь период \n 2.Сумма всех трат за период \n 3.Максимум трат \n 4.Максимальные траты за день \n 5.Среднее за период в день \n 6.Выход \n --> "))
         except ValueError:
             print('выбор должен быть числом! \n ')
             continue
@@ -80,24 +87,36 @@ def show_stats():
             case 2:
                 print(total_expense(), '\n')
             case 3:
-                max_category = get_max_category()
-                for category, amount in max_category:
-                    print(f'{category} - {amount}')
+                category, amount = get_max_category()
+                print(f'{category} - {amount}')
             case 4:
-                max_amounts = get_max_amounts()
-                for d, amount in max_amounts:
-                    print(f'{d} : {amount}')
+                d, amount = get_max_amounts()
+                print(f'{d} : {amount}')
             case 5:
+                per_1 = input('введите первый период(YYYY-MM-DD): ')
+                per_2 = input('введите второй период(YYYY-MM-DD): ')
+                if not is_valid_date(per_1) or not is_valid_date(per_2):
+                    print('неверный формат!')
+                    continue
+                if per_1 > per_2:
+                    per_1, per_2 = per_2, per_1
+                total, days = get_avg_per_day(per_1, per_2)
+                if days == 0:
+                    print('Нет такого периода')
+                    continue
+                elif days > 0:
+                    print('Ср. траты в день за этот период составили')
+                    print(f'--> {total / days}')
+            case 6:
                 return
             case _:
                 print('введен неверный формат!')
                 continue
 
-
 def show_menu():
     while True:
         try:
-            menu = int(input(" 1.Добавить трату \n 2.Статистика \n 3.Очистить все траты \n 4.Выход \n --> "))
+            menu = int(input(" 1.Добавить трату \n 2.Статистика \n 3.Очистить все траты \n 4.Очистить период трат \n 5.Выход \n --> "))
         except ValueError:
             print('выбор должен быть числом! \n ')
             continue
@@ -118,14 +137,32 @@ def show_menu():
                         print('таблица пуста')
                         continue
                 else:
-                    print('отмена текщего действия')
+                    print('отмена текущего действия')
                     continue
             case 4:
+                per_1 = input('введите первый период(YYYY-MM-DD): ')
+                per_2 = input('введите второй период(YYYY-MM-DD): ')
+                if not is_valid_date(per_1) or not is_valid_date(per_2):
+                    print('неверный формат!')
+                    continue
+                if per_1 > per_2:
+                    per_1,per_2 = per_2,per_1
+                line_deleted = input('вы действительно хотите удалить период трат?(да / нет) --> ')
+                if line_deleted.lower() == 'да':
+                    res = delete_expense_per(per_1,per_2)
+                    if res > 0:
+                        print('траты успешно очищены!')
+                    elif res == 0:
+                        print('Нет такого периода')
+                        continue
+                else:
+                    print('отмена текущего действия')
+                    continue
+            case 5:
                 break
             case _:
                 print('введен неверный формат!')
                 continue
-
 
 def main():
     init_db()
